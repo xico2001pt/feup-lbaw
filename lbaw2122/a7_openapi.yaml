@@ -1,0 +1,1405 @@
+openapi: 3.0.0
+
+info:
+  version: '1.0'
+  title: 'LBAW Eventful Web API'
+  description: 'Web Resources Specification (A7) for Eventful'
+
+servers:
+- url: http://lbaw2122.lbaw.fe.up.pt
+  description: Production server
+
+externalDocs:
+  description: Find more info here.
+  url: https://git.fe.up.pt/lbaw/lbaw2122/lbaw2122/-/wikis/eap
+
+tags:
+  - name: 'M01: Authentication and User Profile'
+  - name: 'M02: Events'
+  - name: 'M03: User Interactions'
+  - name: 'M04: Static Pages'
+  - name: 'M05: Reports'
+  - name: 'M06: Administration'
+
+paths:
+
+  # --------------------------------- LOGIN/LOGOUT ---------------------------------
+
+  /login:
+    get:
+      operationId: R101
+      summary: 'R101: Show Login Form'
+      description: 'Provide login form. Access: PUB'
+      tags:
+        - 'M01: Authentication and User Profile'
+      responses:
+        '200':
+          description: 'Show login form'
+
+    post:
+      operationId: R102
+      summary: 'R102: Login Action'
+      description: 'Processes the login form submission. Access: PUB'
+      tags:
+        - 'M01: Authentication and User Profile'
+      requestBody:
+        required: true
+        content:
+          application/x-www-form-urlencoded:
+            schema:
+              type: object
+              properties:
+                username:
+                  type: string
+                password:
+                  type: string
+              required:
+                  - username
+                  - password
+      responses:
+        '302':
+          description: 'Redirect after processing the login credentials.'
+          headers:
+            Location:
+              schema:
+                type: string
+              examples:
+                302Success:
+                  description: 'Successful authentication. Redirect to user profile.'
+                  value: '/user/{user_id}'
+                302Failure:
+                  description: 'Failed authentication. Redirect to login form.'
+                  value: '/login'
+  
+  /logout:
+    get:
+      operationId: R103
+      summary: 'R103: Logout Action'
+      description: 'Logout the current authenticated user. Access: USR, ADM'
+      tags:
+        - 'M01: Authentication and User Profile'
+      responses:
+        '302':
+          description: 'Redirect after processing logout.'
+          headers:
+            Location:
+              schema:
+                type: string
+              examples:
+                302Success:
+                  description: 'Successful logout. Redirect to homepage.'
+                  value: '/'
+                302Failure:
+                  description: 'Failed logout. Redirect to homepage.'
+                  value: '/'
+
+  # --------------------------------- REGISTER ---------------------------------
+
+  /register:
+    get:
+      operationId: R104
+      summary: 'R104: Show Register Form'
+      description: 'Provide new user registration form. Access: PUB'
+      tags:
+        - 'M01: Authentication and User Profile'
+      responses:
+        '200':
+          description: 'Show register UI'
+
+    post:
+      operationId: R105
+      summary: 'R105: Create User Action'
+      description: 'Processes the new user registration form submission. Access: PUB'
+      tags:
+        - 'M01: Authentication and User Profile'
+      requestBody:
+        required: true
+        content:
+          application/x-www-form-urlencoded:
+            schema:
+              type: object
+              properties:
+                username:
+                  type: string
+                email:
+                  type: string
+                password:
+                  type: string
+                  format: password
+                name:
+                  type: string
+                picture:                  # PFP not required
+                  type: string
+                  format: binary
+                birthdate:
+                  type: string
+                  format: date
+              required:
+                - username
+                - email
+                - password
+                - name
+                - birthdate
+      responses:
+        '302':
+          description: 'Redirect after processing the new user information.'
+          headers:
+            Location:
+              schema:
+                type: string
+              examples:
+                302Success:
+                  description: 'Successful authentication. Redirect to user profile.'
+                  value: '/'
+                302Failure:
+                  description: 'Failed authentication. Redirect to register form.'
+                  value: '/register'
+
+  # --------------------------------- RECOVER PASSWORD ---------------------------------
+
+  /user/{user_id}/recover-password:
+    get:
+      operationId: R106
+      summary: 'R106: Show Recover Password Form'
+      description: 'Provide password recover form. Access: PUB'
+      tags:
+        - 'M01: Authentication and User Profile'
+      parameters:
+        - in: path
+          name: user_id
+          schema:
+            type: integer
+          required: true
+      responses:
+        '200':
+          description: 'Show recover password form'
+
+    post:
+      operationId: R107
+      summary: 'R107: Recover Password Action'
+      description: 'Recover a password of the account associated to the given email. Access: PUB'
+      tags:
+        - 'M01: Authentication and User Profile'
+      parameters:
+        - in: path
+          name: user_id
+          schema:
+            type: integer
+          required: true
+      requestBody:
+        required: true
+        content:
+          application/x-www-form-urlencoded:
+            schema:
+              type: object
+              properties:
+                email:
+                  type: string
+              required:
+               - email
+      responses:
+        '302':
+          description: 'Redirect after processing the recover password request.'
+          headers:
+            Location:
+              schema:
+                type: string
+              examples:
+                302Success:
+                  description: 'If an account exists with the given email password recovery information will be sent. Redirect to login page.'
+                  value: '/login'
+                302Failure:
+                  description: 'Failed authentication. Redirect to login form.'
+                  value: '/login'
+
+  # --------------------------------- USER PROFILE ---------------------------------
+
+  /user/{user_id}:
+    get:
+      operationId: R108
+      summary: 'R108: View User Profile'
+      description: 'Show the individual user profile. Access: PUB'
+      tags:
+        - 'M01: Authentication and User Profile'
+      parameters:
+        - in: path
+          name: user_id
+          schema:
+            type: integer
+          required: true
+      responses:
+        '200':
+          description: 'Show User Profile UI'
+
+    put:
+      operationId: R109
+      summary: 'R109: User Update Action'
+      description: 'Update a user. Access: OWN, ADM'
+      tags:
+        - 'M01: Authentication and User Profile'
+      parameters:
+      - in: path
+        name: user_id
+        schema:
+          type: integer
+        required: true
+      requestBody:
+        required: true
+        content:
+          application/x-www-form-urlencoded:
+            schema:
+              type: object
+              properties:
+                username:
+                  type: string
+                email:
+                  type: string
+                name:
+                  type: string
+                picture:
+                  type: string
+                  format: binary
+                description:
+                  type: string
+                password:
+                  type: string
+      responses:
+        '302':
+          description: 'Redirect after updating user.'
+          headers:
+            Location:
+              schema:
+                type: string
+              examples:
+                302Success:
+                  description: 'Successful user update. Redirect to user page.'
+                  value: '/user/{user_id}'
+                302Failure:
+                  description: 'Failed user update. Redirect to user update form.'
+                  value: '/user/{user_id}/update'
+                    
+    delete:
+      operationId: R110
+      summary: 'R110: Delete User Action'
+      description: 'Delete a user. Access: OWN, ADM'
+      tags:
+        - 'M01: Authentication and User Profile'
+      parameters:
+      - in: path
+        name: user_id
+        description: ID of the user
+        schema:
+          type: integer
+        required: true
+      responses:
+        '302':
+          description: 'Redirect after deleting user.'
+          headers:
+              Location:
+                schema:
+                  type: string
+                examples:
+                  302Success:
+                    description: 'Successful user delete. Redirect to homepage.'
+                    value: '/'
+                  302Failure:
+                    description: 'Failed user delete. Redirect to user page.'
+                    value: '/user/{user_id}'
+
+  # --------------------------------- USER UPDATE ---------------------------------
+
+  /user/{user_id}/update:
+    get:
+      operationId: R111
+      summary: 'R111: Show User Update Form'
+      description: 'Provide user update form. Access: OWN, ADM'
+      tags:
+        - 'M01: Authentication and User Profile'
+      parameters:
+      - in: path
+        name: user_id
+        schema:
+          type: integer
+        required: true
+      responses:
+        '200':
+          description: 'Show user update form'
+
+  # --------------------------------- OBTAIN USER IMAGE ---------------------------------
+
+  /user/{user_id}/profile_pic:
+    get:
+      operationId: R112
+      summary: 'R112: Return User Profile Picture'
+      description: 'Provide user profile picture. Access: PUB'
+      tags:
+        - 'M01: Authentication and User Profile'
+      parameters:
+      - in: path
+        name: user_id
+        schema:
+          type: integer
+        required: true
+      responses:
+        '200':
+          description: 'Return user profile picture'
+
+  # --------------------------------- EVENT ---------------------------------
+
+  /createEvent:
+    get:
+      operationId: R201
+      summary: 'R201: Show Event Creation Form'
+      description: 'Provide event creation form. Access: USR'
+      tags:
+        - 'M02: Events'
+      responses:
+        '200':
+          description: 'Show event creation form'
+
+  /event:
+    get:
+      operationId: R202
+      summary: 'R202: Search Events'
+      description: 'Show search results. Access: PUB'
+      tags:
+        - 'M02: Events'
+      parameters:
+      - in: query
+        name: search
+        description: Text used to search for event titles and event descriptions
+        schema:
+          type: integer
+        required: true
+      - in: query
+        name: tags
+        description: Array with the id of the tags that we want to cross-reference with the resultant events
+        schema:
+          type: array
+          items:
+            type: integer
+        required: false
+      responses:
+        '200':
+          description: 'Show search results'
+
+    post:
+      operationId: R203
+      summary: 'R203: Event Create Action'
+      description: 'Create an event. Access: USR'
+      tags:
+        - 'M02: Events'
+      requestBody:
+        required: true
+        content:
+          application/x-www-form-urlencoded:
+            schema:
+              type: object
+              properties:
+                title:
+                  type: string
+                image:
+                  type: string
+                  format: binary
+                description:
+                  type: string
+                location:
+                  type: string
+                date:
+                  type: string
+                visibility:
+                  type: boolean
+                accessability:
+                  type: boolean
+                capacity:
+                  type: integer
+                price:
+                  type: number
+                  format: float
+              required:
+                - title
+                - image
+                - description
+                - location
+                - date
+                - visibility
+                - accessability
+                - capacity
+                - price
+      responses:
+        '302':
+          description: 'Redirect after creating event.'
+          headers:
+            Location:
+              schema:
+                type: string
+              examples:
+                302Success:
+                  description: 'Successful event creation. Redirect to event page.'
+                  value: '/event/{event_id}'
+                302Failure:
+                  description: 'Failed event creation. Redirect to event creation form.'
+                  value: '/createEvent'
+
+  # --------------------------------- EVENT ---------------------------------
+
+  /event/{event_id}:
+    get:
+      operationId: R204
+      summary: 'R204: View Event Page'
+      description: 'Show event page. Access: PUB'
+      tags:
+        - 'M02: Events'
+      parameters:
+      - in: path
+        name: event_id
+        schema:
+          type: integer
+        required: true
+      responses:
+        '200':
+          description: 'Show Event Page UI'
+
+    put:
+      operationId: R205
+      summary: 'R205: Event Update Action'
+      description: 'Update an event. Access: HOST'
+      tags:
+        - 'M02: Events'
+      parameters:
+      - in: path
+        name: event_id
+        schema:
+          type: integer
+        required: true
+      requestBody:
+        required: true
+        content:
+          application/x-www-form-urlencoded:
+            schema:
+              type: object
+              properties:
+                title:
+                  type: string
+                image:
+                  type: string
+                  format: binary
+                description:
+                  type: string
+                location:
+                  type: string
+                date:
+                  type: string
+                visibility:
+                  type: boolean
+                accessability:
+                  type: boolean
+                capacity:
+                  type: integer
+                price:
+                  type: number
+                  format: float
+      responses:
+        '302':
+          description: 'Redirect after updating event.'
+          headers:
+            Location:
+              schema:
+                type: string
+              examples:
+                302Success:
+                  description: 'Successful event update. Redirect to event page.'
+                  value: '/event/{event_id}'
+                302Failure:
+                  description: 'Failed event update. Redirect to event update form.'
+                  value: '/event/{event_id}/update'
+
+    delete:
+      operationId: R206
+      summary: 'R206: Delete Event Action'
+      description: 'Delete an event. Access: HOST'
+      tags:
+        - 'M02: Events'
+      parameters:
+        - in: path
+          name: event_id
+          schema:
+            type: integer
+          required: true
+      responses:
+        '302':
+          description: 'Redirect after deleting event.'
+          headers:
+            Location:
+              schema:
+                type: string
+              examples:
+                302Success:
+                  description: 'Successful event delete. Redirect to homepage.'
+                  value: '/'
+                302Failure:
+                  description: 'Failed event delete. Redirect to event page.'
+                  value: '/event/{event_id}'
+    
+  # --------------------------------- EVENT UPDATE ---------------------------------
+
+  /event/{event_id}/update:
+    get:
+      operationId: R207
+      summary: 'R207: Show Event Update Form'
+      description: 'Provide event update form. Access: HOST'
+      parameters:
+      - in: path
+        name: event_id
+        schema:
+          type: integer
+        required: true
+      tags:
+        - 'M02: Events'
+      responses:
+        '200':
+          description: 'Show event update form'
+
+  # --------------------------------- TICKET PAYMENT PAGE ---------------------------------
+  
+  /event/{event_id}/payment:
+    get:
+      operationId: R208
+      summary: 'R208: Ticket Payment Form'
+      description: 'Show ticket payment form. Access: USR'
+      tags:
+        - 'M02: Events'
+      parameters:
+        - in: path
+          name: event_id
+          description: ID of the event we want to buy a ticket from
+          schema:
+            type: number
+            format: float
+          required: true
+      responses:
+        '200':
+          description: 'Show ticket payment form'
+
+    post:
+      operationId: R209
+      summary: 'R209: Ticket Payment Action'
+      description: 'Buying a ticket for an event. Access: USR'
+      tags:
+        - 'M02: Events'
+      parameters:
+        - in: path
+          name: event_id
+          description: ID of the event we want to buy a ticket from
+          schema:
+            type: number
+            format: float
+          required: true
+      requestBody:
+        required: true
+        content:
+          application/x-www-form-urlencoded:
+            schema:
+              type: object
+              properties:
+                name:
+                  type: string
+                cardType:
+                  type: string
+                cardNumber:
+                  type: integer
+                cardExpirationDate:
+                  type: string
+                  format: date
+                CVCNumber:
+                  type: integer
+              required:
+                - name
+                - cardType
+                - cardNumber
+                - cardExpirationDate
+                - CVCNumber
+      responses:
+        '302':
+          description: 'Redirect after buying event ticket.'
+          headers:
+            Location:
+              schema:
+                type: string
+              examples:
+                302Success:
+                  description: 'Successful transaction. Redirect to event page.'
+                  value: '/event/{event_id}'
+                302Failure:
+                  description: 'Failed transaction. Redirect to ticket payment form.'
+                  value: '/event/{event_id}/payment'
+
+  # --------------------------------- LIST EVENTS ---------------------------------
+
+  /events:
+    get:
+      operationId: R210
+      summary: 'R210: Show List of Events'
+      description: 'Show a list with events. Access: PUB'
+      tags:
+        - 'M02: Events'
+      responses:
+        '200':
+          description: 'Show list with all events'
+
+  # --------------------------------- OBTAIN EVENT IMAGE ---------------------------------
+
+  /event/{event_id}/image:
+    get:
+      operationId: R211
+      summary: 'R211: Return Event Image'
+      description: 'Provide event image. Access: PUB (Public Event), ATT & HOST (Private Event)'
+      tags:
+        - 'M02: Events'
+      parameters:
+      - in: path
+        name: event_id
+        schema:
+          type: integer
+        required: true
+      responses:
+        '200':
+          description: 'Return event image'
+
+  # --------------------------------- INVITATIONS ---------------------------------
+
+  /api/event/{event_id}/invite:
+    post:
+      operationId: 'R301'
+      summary: 'R301: Create Invitation API'
+      description: 'Create an invite to an event, from one user to another. Access: USR'
+      tags:
+        - 'M03: User Interactions'
+      parameters:
+      - in: path
+        name: event_id
+        description: ID of the event that the user wants to create an invite to
+        schema:
+          type: integer
+        required: true
+      responses:
+        '200':
+          description: 'Success'
+    
+  /api/invite/{invite__id}/accept:
+    put:
+      operationId: 'R302'
+      summary: 'R302: Accepting Invitation API'
+      description: 'Accept an invitation to an event. Access: USR'
+      tags:
+        - 'M03: User Interactions'
+      parameters:
+        - in: path
+          name: invite_id
+          description: ID of the invite that the user wants to accept (by altering its response)
+          schema:
+            type: integer
+          required: true
+      responses:
+        '200':
+          description: 'Success'
+        '403':
+          description: 'Access denied'
+  
+  /api/invite/{invite__id}/reject:
+    delete:
+      operationId: 'R303'
+      summary: 'R303: Rejecting Invitation API'
+      description: 'Reject an invitation to an event. Access: USR'
+      tags:
+        - 'M03: User Interactions'
+      parameters:
+        - in: path
+          name: invite_id
+          description: ID of the invite that the user wants to reject (by deleting it from the database)
+          schema:
+            type: integer
+          required: true
+      responses:
+        '200':
+          description: 'Success'
+        '403':
+          description: 'Access denied'
+
+  # --------------------------------- REQUESTS ---------------------------------
+
+  /api/event/{event_id}/request:
+    post:
+      operationId: 'R304'
+      summary: 'R304: Create Join Event Request API'
+      description: 'Create a request to join the event. Access: USR'
+      tags:
+        - 'M03: User Interactions'
+      parameters:
+        - in: path
+          name: event_id
+          description: ID of the event that the user wants to create a request to
+          schema:
+            type: integer
+          required: true
+      responses:
+        '200':
+          description: 'Success'
+
+  /api/request/{request_id}/accept:
+    put:
+      operationId: 'R305'
+      summary: 'R305: Accepting Event Join Request API'
+      description: 'Accept a request to join event. Access: HOST'
+      tags:
+        - 'M03: User Interactions'
+      parameters:
+        - in: path
+          name: request_id
+          description: ID of the request that the host wants to accept (by altering its response)
+          schema:
+            type: integer
+          required: true
+      responses:
+        '200':
+          description: 'Success'
+        '403':
+          description: 'Access denied'
+  
+  /api/request/{request_id}/reject:
+    delete:
+      operationId: 'R306'
+      summary: 'R306: Rejecting Event Join Request API'
+      description: 'Reject a request to join event. Access: HOST'
+      tags:
+        - 'M03: User Interactions'
+      parameters:
+        - in: path
+          name: request_id
+          description: ID of the request that the host wants to reject (by deleting it from the database)
+          schema:
+            type: integer
+          required: true
+      responses:
+        '200':
+          description: 'Success'
+        '403':
+          description: 'Access denied'
+
+  # --------------------------------- COMMENT ---------------------------------
+
+  /api/event/{event_id}/comment:
+    post:
+      operationId: 'R307'
+      summary: 'R307: Create Comment API'
+      description: 'Create a comment on an event. Access: ATT'
+      tags:
+        - 'M03: User Interactions'
+      parameters:
+      - in: path
+        name: event_id
+        description: ID of the event where the user want to write a comment
+        schema:
+          type: integer
+        required: true
+      requestBody:
+        required: true
+        content:
+          application/x-www-form-urlencoded:
+            schema:
+              type: object
+              properties:
+                content:
+                  type: string
+                files:
+                  type: array
+                  items:
+                    type: string
+                    format: binary
+                  minItems: 1
+                  maxItems: 10
+              required:
+                - content
+      responses:
+        '200':
+          description: 'Success'
+        '403':
+          description: 'Access denied'
+
+  /api/comment/{comment_id}:
+    put:
+      operationId: 'R308'
+      summary: 'R308: Update Comment API'
+      description: 'Update a comment on an event. Access: AUT'
+      tags:
+        - 'M03: User Interactions'
+      parameters:
+      - in: path
+        name: comment_id
+        description: ID of the comment
+        schema:
+          type: integer
+        required: true
+      requestBody:
+        required: true
+        content:
+          application/x-www-form-urlencoded:
+            schema:
+              type: object
+              properties:
+                content:
+                  type: string
+                files:
+                  type: array
+                  items:
+                    type: string
+                    format: binary
+                  minItems: 1
+                  maxItems: 10
+      responses:
+        '200':
+          description: 'Success'
+        '403':
+          description: 'Access denied'
+
+    delete:
+      operationId: 'R309'
+      summary: 'R309: Delete Comment API'
+      description: 'Delete a comment on an event. Access: AUT'
+      tags:
+        - 'M03: User Interactions'
+      parameters:
+      - in: path
+        name: comment_id
+        description: ID of the comment
+        schema:
+          type: integer
+        required: true
+      responses:
+        '200':
+          description: 'Success'
+        '403':
+          description: 'Access denied'
+
+  # --------------------------------- RATING A COMMENT ---------------------------------
+  
+  /api/comment/{comment_id}/rating:
+    post:
+      operationId: 'R310'
+      summary: 'R310: Creating a Rating on a Comment API'
+      description: 'Create a rating a comment on an event. Access: REA'
+      tags:
+        - 'M03: User Interactions'
+      parameters:
+      - in: path
+        name: comment_id
+        description: ID of the comment
+        schema:
+          type: integer
+        required: true
+      requestBody:
+        required: true
+        content:
+          application/x-www-form-urlencoded:
+            schema:
+              type: object
+              properties:
+                rating:
+                  type: boolean
+              required:
+                - rating
+      responses:
+        '200':
+          description: 'Success'
+        '403':
+          description: 'Access denied'
+
+  # --------------------------------- JOINING/LEAVING EVENT ---------------------------------
+
+  /event/{event_id}/attend:
+    post:
+      operationId: 'R311'
+      summary: 'R312: Joining Event'
+      description: 'Joining event. Access: USR'
+      tags:
+        - 'M03: User Interactions'
+      parameters:
+      - in: path
+        name: event_id
+        description: ID of the event the user wants to attend
+        schema:
+          type: integer
+        required: true
+      responses:
+        '302':
+          description: 'Redirect after joining event.'
+          headers:
+            Location:
+              schema:
+                type: string
+              examples:
+                302Success:
+                  description: 'Successful event join. Redirect to event page.'
+                  value: '/event/{event_id}'
+                302Failure:
+                  description: 'Failed event join. Redirect to event homepage.'
+                  value: '/'
+    
+    delete:
+      operationId: 'R312'
+      summary: 'R313: Leaving Event'
+      description: 'Leaving event. Access: ATT'
+      tags:
+        - 'M03: User Interactions'
+      parameters:
+      - in: path
+        name: event_id
+        description: ID of the event the user wants to leave
+        schema:
+          type: integer
+        required: true
+      responses:
+        '302':
+          description: 'Redirect after leaving event.'
+          headers:
+            Location:
+              schema:
+                type: string
+              examples:
+                302Success:
+                  description: 'Successfully left event. Redirect to homepage.'
+                  value: '/'
+                302Failure:
+                  description: 'Failed to leave event. Redirect to event page.'
+                  value: '/event/{event_id}'
+
+# --------------------------------- POST ---------------------------------
+
+  /api/event/{event_id}/post:
+    post:
+      operationId: 'R313'
+      summary: 'R314: Create Post API'
+      description: 'Create a post on an event. Access: HOST'
+      tags:
+        - 'M03: User Interactions'
+      parameters:
+      - in: path
+        name: event_id
+        description: ID of the event where the user wants to create a post (must be the host of the event)
+        schema:
+          type: integer
+        required: true
+      requestBody:
+        required: true
+        content:
+          application/x-www-form-urlencoded:
+            schema:
+              type: object
+              properties:
+                text:
+                  type: string
+              required:
+                - text   
+      responses:
+        '200':
+          description: 'Success'
+        '403':
+          description: 'Access denied'
+
+  /api/post/{post_id}:
+    put:
+      operationId: 'R314'
+      summary: 'R315: Update Post API'
+      description: 'Update a post on an event. Access: HOST'
+      tags:
+        - 'M03: User Interactions'
+      parameters:
+      - in: path
+        name: post_id
+        description: ID of the post
+        schema:
+          type: integer
+        required: true
+      requestBody:
+        required: true
+        content:
+          application/x-www-form-urlencoded:
+            schema:
+              type: object
+              properties:
+                title:
+                  type: string
+                description:
+                  type: string         
+      responses:
+        '200':
+          description: 'Success'
+        '403':
+          description: 'Access denied'
+
+    delete:
+      operationId: 'R315'
+      summary: 'R316: Delete Post API'
+      description: 'Delete a post on an event. Access: HOST'
+      tags:
+        - 'M03: User Interactions'
+      parameters:
+      - in: path
+        name: post_id
+        description: ID of the post
+        schema:
+          type: integer
+        required: true
+      responses:
+        '200':
+          description: 'Success'
+        '403':
+          description: 'Access denied'
+
+# --------------------------------- POLL ---------------------------------
+
+  /api/event/{event_id}/poll:
+    post:
+      operationId: 'R316'
+      summary: 'R317: Create Poll API'
+      description: 'Create a poll on an event. Access: HOST'
+      tags:
+        - 'M03: User Interactions'
+      parameters:
+      - in: path
+        name: event_id
+        description: ID of the event where the user wants to create a poll (must be the host of the event)
+        schema:
+          type: integer
+        required: true
+      requestBody:
+        required: true
+        content:
+          application/x-www-form-urlencoded:
+            schema:
+              type: object
+              properties:
+                title:
+                  type: string
+                description:
+                  type: string   
+                options:
+                  type: array
+                  items:
+                    type: string
+              required:
+                - title
+                - description
+                - options
+      responses:
+        '200':
+          description: 'Success'
+        '403':
+          description: 'Access denied'
+
+  /api/poll/{poll_id}:
+    delete:
+      operationId: 'R317'
+      summary: 'R318: Delete Poll API'
+      description: 'Delete a poll on an event. Access: HOST'
+      tags:
+        - 'M03: User Interactions'
+      parameters:
+      - in: path
+        name: poll_id
+        description: ID of the poll
+        schema:
+          type: integer
+        required: true
+      responses:
+        '200':
+          description: 'Success'
+        '403':
+          description: 'Access denied'
+
+# --------------------------------- VOTE ---------------------------------
+
+  /api/option/{option_id}/vote:
+    post:
+      operationId: 'R318'
+      summary: 'R319: Create Vote on an Option of a Poll API'
+      description: 'Create vote on an option of a poll. Access: ATT'
+      tags:
+        - 'M03: User Interactions'
+      parameters:
+      - in: path
+        name: option_id
+        description: ID of the option
+        schema:
+          type: integer
+        required: true
+      responses:
+        '200':
+          description: 'Success'
+        '403':
+          description: 'Access denied'
+
+    delete:
+      operationId: 'R319'
+      summary: 'R320: Delete Vote on an Option of a Poll API'
+      description: 'Delete vote on an option of a poll. Access: ATT'
+      tags:
+        - 'M03: User Interactions'
+      parameters:
+      - in: path
+        name: option_id
+        description: ID of the option
+        schema:
+          type: integer
+        required: true
+      responses:
+        '200':
+          description: 'Success'
+        '403':
+          description: 'Access denied'
+
+  # --------------------------------- KICK ATTENDEE ---------------------------------
+
+  /api/event/{event_id}/kick:
+    delete:
+      operationId: 'R320'
+      summary: 'R321: Kick Attendee From an Event API'
+      description: 'Kick attendee from an event. Access: HOST'
+      tags:
+        - 'M03: User Interactions'
+      parameters:
+      - in: path
+        name: event_id
+        description: ID of the event
+        schema:
+          type: integer
+        required: true
+      requestBody:
+        required: true
+        content:
+          application/x-www-form-urlencoded:
+            schema:
+              type: object
+              properties:
+                user_id:
+                  type: integer
+              required:
+                - user_id
+      responses:
+        '200':
+          description: 'Success'
+        '403':
+          description: 'Access denied'
+
+  # --------------------------------- STATIC PAGES ---------------------------------
+
+  /:
+    get:
+      operationId: 'R401'
+      summary: 'R401: Homepage'
+      description: 'Homepage to greet the user. Access: PUB'
+      tags:
+        - 'M04: Static Pages'
+      responses:
+        '200':
+          description: 'Show homepage'
+
+  /about:
+    get:
+      operationId: 'R402'
+      summary: 'R402: About Us Page'
+      description: 'Page with information about the development team. Access: PUB'
+      tags:
+        - 'M04: Static Pages'
+      responses:
+        '200':
+          description: 'Show about us page'
+
+  /contact:
+    get:
+      operationId: 'R403'
+      summary: 'R403: Contact Us Page'
+      description: 'Page with contact information. Access: PUB'
+      tags:
+        - 'M04: Static Pages'
+      responses:
+        '200':
+          description: 'Show contact page'
+          
+  # --------------------------------- REPORTING EVENT ---------------------------------
+
+  /api/event/{event_id}/report:
+    post:
+      operationId: 'R501'
+      summary: 'R501: Add Event Report API'
+      description: 'Report the specified event. Access: USR'
+      tags:
+        - 'M05: Reports'
+      parameters:
+      - in: path
+        name: event_id
+        description: ID of the event the user wants to report
+        schema:
+          type: integer
+        required: true
+      requestBody:
+        required: true
+        content:
+          application/x-www-form-urlencoded:
+            schema:
+              type: object
+              properties:
+                motive:
+                  type: string
+              required:
+                - motive
+      responses:
+        '200':
+          description: 'Report successfully created'
+        '403':
+          description: 'Access denied'
+  
+  # --------------------------------- REPORTING COMMENT ---------------------------------
+
+  /api/comment/{comment_id}/report:
+    post:
+      operationId: 'R502'
+      summary: 'R502: Add Comment Report API'
+      description: 'Report the specified comment. Access: ATT'
+      tags:
+        - 'M05: Reports'
+      parameters:
+      - in: path
+        name: comment_id
+        description: ID of the comment the user wants to report
+        schema:
+          type: integer
+        required: true
+      requestBody:
+        required: true
+        content:
+          application/x-www-form-urlencoded:
+            schema:
+              type: object
+              properties:
+                motive:
+                  type: string
+              required:
+                - motive
+      responses:
+        '200':
+          description: 'Report successfully created'
+        '403':
+          description: 'Access denied'
+
+  # --------------------------------- REPORTING USER ---------------------------------
+
+  /api/user/{user_id}/report:
+    post:
+      operationId: 'R503'
+      summary: 'R503: Add User Report API'
+      description: 'Report the specified user. Access: USR'
+      tags:
+        - 'M05: Reports'
+      parameters:
+      - in: query
+        name: user_id
+        description: ID of the user the user wants to report
+        schema:
+          type: integer
+        required: true
+      requestBody:
+        required: true
+        content:
+          application/x-www-form-urlencoded:
+            schema:
+              type: object
+              properties:
+                motive:
+                  type: string
+              required:
+                - motive
+      responses:
+        '200':
+          description: 'Report successful'
+        '403':
+          description: 'Access denied'
+  
+  # --------------------------------- UNBLOCK APPEAL ---------------------------------
+
+  /api/unblockAppeal:
+    post:
+      operationId: 'R504'
+      summary: 'R504: Add Unblock Appeal. Access: BLK'
+      description: 'Appeal to the unblocking of the account'
+      tags:
+        - 'M05: Reports'
+      responses:
+        '200':
+          description: 'Unblock appeal request successful'
+        '403':
+          description: 'Access denied'
+
+  # --------------------------------- REMOVE REPORT ---------------------------------
+  
+  /api/report/{report_id}:
+    delete:
+      operationId: 'R601'
+      summary: 'R601: Remove Report API'
+      description: 'Remove the specified report. Access: ADM'
+      tags:
+        - 'M06: Administration'
+      parameters:
+      - in: path
+        name: report_id
+        description: ID of the report to be deleted
+        schema:
+          type: integer
+        required: true
+      responses:
+        '200':
+          description: 'Report successfully removed'
+        '403':
+          description: 'Access denied'
+
+  # --------------------------------- BLOCKING USER ---------------------------------
+
+  /api/user/{user_id}/block:
+    put:
+      operationId: 'R602'
+      summary: 'R602: Block User API'
+      description: 'Block user. Access: ADM'
+      tags:
+        - 'M06: Administration'
+      parameters:
+      - in: path
+        name: user_id
+        description: ID of the user the administrator wants to block
+        schema:
+          type: integer
+        required: true
+      responses:
+        '200':
+          description: 'Change user block status successful'
+        '403':
+          description: 'Access denied'
+
+  /api/user/{user_id}/unblock:
+    put:
+      operationId: 'R603'
+      summary: 'R603: Unblock User API'
+      description: 'Unblock user. Access: ADM'
+      tags:
+        - 'M06: Administration'
+      parameters:
+      - in: path
+        name: user_id
+        description: ID of the user the administrator wants to unblock
+        schema:
+          type: integer
+        required: true
+      responses:
+        '200':
+          description: 'Change user block status successful'
+        '403':
+          description: 'Access denied'

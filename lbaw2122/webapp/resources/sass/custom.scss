@@ -1,0 +1,65 @@
+:root {
+    --blue: #34a0df;
+}
+
+* {
+    font-family: -apple-system,BlinkMacSystemFont,"Segoe UI",Roboto;
+    font-size: 1.2rem;
+}
+
+.homepage-title {
+    font-family: 'Pacifico', 'cursive';
+    color: #2e3338;
+    font-size: 10vh !important;
+}
+
+.navbar-brand {
+    font-family: 'Pacifico', 'cursive';
+}
+
+.card {
+    width: 28rem;
+}
+
+input.form-control {
+    background: #fff;
+}
+
+.pagination {
+    justify-content: center;
+}
+
+.form-group > label {
+    font-weight: normal;
+}
+
+.form-check > label {
+    font-weight: normal;
+}
+
+.breadcrumb-item > a {
+    text-decoration: none;
+    font-size: large;
+}
+
+.breadcrumb-item {
+    font-size: large;
+}
+
+.breadcrumb {
+    background-color: transparent;
+}
+
+.jumbotron {
+    background-color: transparent;
+}
+
+.dropdown-menu {
+    max-height: 40em;
+    overflow-y: auto;
+    overflow-x: hidden;
+}
+
+.form-check-label{
+    padding-right: 4em;
+}

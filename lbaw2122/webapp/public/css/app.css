@@ -1,0 +1,81 @@
+:root {
+  --blue: #34a0df;
+}
+
+* {
+  font-family: 'Open Sans', sans-serif;
+  font-weight: 400;
+  font-size: 1.2rem;
+}
+
+.homepage-title {
+  font-family: "Pacifico", "cursive";
+  color: #2e3338;
+  font-size: 10vh !important;
+}
+
+.navbar-brand {
+  font-family: "Pacifico", "cursive";
+}
+
+.card {
+  width: 28rem;
+}
+
+input.form-control {
+  background: #fff;
+}
+
+.pagination {
+  justify-content: center;
+}
+
+.form-group > label {
+  font-weight: normal;
+}
+
+.form-check > label {
+  font-weight: normal;
+}
+
+.breadcrumb-item > a {
+  text-decoration: none;
+  font-size: large;
+}
+
+.breadcrumb-item {
+  font-size: large;
+}
+
+.breadcrumb {
+  background-color: transparent;
+}
+
+.jumbotron {
+  background-color: transparent;
+}
+
+.dropdown-menu {
+  max-height: 40em;
+  overflow-y: auto;
+  overflow-x: hidden;
+}
+
+.form-check-label {
+  padding-right: 4em;
+}
+
+input:focus {
+  border-color: transparent !important;
+  border-width: 1px; 
+}
+
+.notificationButton {
+  height: 100%;
+  line-height: 0px;
+}
+
+.required-label:after {
+  content:" *";
+  color:rgb(218, 52, 52);
+}
